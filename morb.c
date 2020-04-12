@@ -78,18 +78,22 @@ void putShip(int field[][10], int typeShip){
     int result = 0;
     int position = 0;//1 - горизонтально, 0 - вертикально
     int lastField[10][10];
+    /*Создаем копию поля*/
     for (int i = 0; i < 10; i++){
          for (int j = 0; j < 10; j++) lastField[i][j] = field[i][j];
     }
-    int x = 4, y = 4;
-    for(int i = 0; i < typeShip; i++)
-        field[y + i][x] = 1;
+    int x = 4, y = 4; // ставим на середину поля
+    /*Рисуем корабль*/
+    for(int i = 0; i < typeShip; i++) field[y + i][x] = 1;
+    /*Рисуем поле*/
     printField(field);
     while(!result){
         switch(getch()){
             case 'w'://вверх
+                /*Ограничение поля*/
+                if (y == 0) break;
                 /*по вертикали*/
-                if (!position){
+                else if (!position){
                     field[y + typeShip - 1][x] = lastField[y + typeShip - 1][x];
                     y--;
                     for(int i = 0; i < typeShip; i++){
@@ -107,8 +111,10 @@ void putShip(int field[][10], int typeShip){
                 printField(field);
                 break;
              case 'a'://влево
+                /*Ограничение поля*/
+                if (x == 0) break;
                 /*по горизонтали*/
-                if (position){
+                else if (position){
                         field[y][x + typeShip - 1] = lastField[y][x + typeShip - 1];
                         x--;
                         for(int i = 0; i < typeShip; i++){
@@ -125,9 +131,12 @@ void putShip(int field[][10], int typeShip){
                 }
                 printField(field);
                 break;
-                /*по вертикали*/
+                
             case 's'://вниз
+                /*по вертикали*/
                 if (!position){
+                    /*Ограничение поля*/
+                    if (y + typeShip - 1 == 9) break;
                     field[y][x] = lastField[y][x];
                     y++;
                     for(int i = 0; i < typeShip; i++){
@@ -136,6 +145,8 @@ void putShip(int field[][10], int typeShip){
                 }
                 /*по горизонтали*/
                 else{
+                    /*Ограничение поля*/
+                    if (y == 9) break;
                     y++;
                     for(int i = 0; i < typeShip; i++){
                         field[y][x + i] = 1;
@@ -147,6 +158,8 @@ void putShip(int field[][10], int typeShip){
             case 'd'://вправо
                 /*по горизонтали*/
                 if (position){
+                    /*Ограничение поля*/
+                    if (x + typeShip - 1 == 9) break;
                     field[y][x] = lastField[y][x];
                     x++;
                     for(int i = 0; i < typeShip; i++){
@@ -155,6 +168,8 @@ void putShip(int field[][10], int typeShip){
                 }
                 /*по вертикали*/
                 else{
+                    /*Ограничение поля*/
+                    if (x == 9) break;
                     x++;
                     for(int i = 0; i < typeShip; i++){
                         field[y + i][x] = 1;
@@ -164,7 +179,13 @@ void putShip(int field[][10], int typeShip){
                 printField(field);
                 break;
             case 'f'://смена направления корабля
+                /*На горизонтальное*/
                 if (!position) {
+                    /*Ограничение поля*/
+                    if (x + typeShip - 1 > 9){
+                        printf ("\n         Поворот невозможен!\n Корабль будет выходить за пределы поля!\n"); 
+                    break;
+                    }
                     position = 1;
                     /*Убираем лишние символы по вертикали*/
                     for (int i = 1; i < typeShip; i++){
@@ -173,7 +194,13 @@ void putShip(int field[][10], int typeShip){
                     }
                     printField(field);
                 }
+                /*На вертикальное*/
                 else {
+                    /*Ограничение поля*/
+                    if (y + typeShip - 1 > 9){
+                        printf ("\n         Поворот невозможен!\n Корабль будет выходить за пределы поля!\n"); 
+                    break;
+                    }
                     position = 0;
                      /*Убираем лишние символы по горизонтали*/
                     for (int i = 1; i < typeShip; i++){
@@ -197,12 +224,11 @@ void putShip(int field[][10], int typeShip){
 }
 /*Выбор корабля для последующей расстановки*/
 void ships(int field[][10], int palyer){
-    int ship1 = 4, ship2 = 3, ship3 = 2, ship4 = 1; // всего кораблей каждого вида
+    int ships[] = {4, 3, 2, 1}; // всего кораблей каждого вида
     #ifdef TEST_TWO_PLAYERS
-        ship1 = 1; 
-        ship2 = 1; 
-        ship3 = 1; 
-        ship4 = 1;
+        for (int i = 0; i < 4; i++){
+            ships[i] = 1;
+        }
     #endif
     int result = 0;
     #ifdef TEST_TWO_PLAYERS
@@ -211,55 +237,21 @@ void ships(int field[][10], int palyer){
     while (result < 20){
         system("cls");
         printf("    Выберите тип корабля\n\n");
-        printf("1. Однопалубник. Осталось: %i\n", ship1);
-        printf("2. Двухпалубник. Осталось: %i\n", ship2);
-        printf("3. Трехпалубник. Осталось: %i\n", ship3);
-        printf("4. Четырехпалубник. Осталось: %i\n", ship4);
-        switch(getchar()){
-            case '1':
-                if (ship1 != 0) {
-                    putShip(field, 1);
-                    ship1--;
-                    result++;
+        printf("1. Однопалубник. Осталось: %i\n", ships[0]);
+        printf("2. Двухпалубник. Осталось: %i\n", ships[1]);
+        printf("3. Трехпалубник. Осталось: %i\n", ships[2]);
+        printf("4. Четырехпалубник. Осталось: %i\n", ships[3]);
+        char choose = getch();
+        if (choose <= '4' && choose >= '1'){
+                if (ships[choose - '0' - 1] != 0){
+                    putShip(field, choose - '0');
+                    ships[choose - '0' - 1]--;
+                    result += choose - '0';
                 }
                 else {
-                    printf ("Такие корабли закончились, выберите другой тип корабля.\n\n");
-                    system("pause");
-                } 
-                break;
-            case '2':
-                if (ship2 != 0) {
-                    putShip(field, 2);
-                    ship2--;
-                    result += 2;
-                }
-                else {
-                    printf ("Такие корабли закончились, выберите другой тип корабля.\n\n");
-                    system("pause");
-                } 
-                break;
-            case '3':
-                if (ship3 != 0) {
-                    putShip(field, 3);
-                    ship3--;
-                    result += 3;
-                }
-                else {
-                    printf ("Такие корабли закончились, выберите другой тип корабля.\n\n");
-                    system("pause");
-                } 
-                break;
-            case '4':
-                if (ship4 != 0) {
-                    putShip(field, 4);
-                    ship4--;
-                    result += 4;
-                }
-                else {
-                    printf ("Такие корабли закончились, выберите другой тип корабля.\n\n");
-                    system("pause");
-                } 
-                break;
+                printf ("Такие корабли закончились, выберите другой тип корабля.\n\n");
+                system("pause");
+            }
         }
     }
 }
