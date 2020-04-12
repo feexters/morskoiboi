@@ -3,6 +3,9 @@
 #include "stdlib.h" //Для функции system()
 #include "conio.h"// getch(), khbit()
 
+//#define TEST_TWO_PLAYERS - запус программы в режиме тестирования для двух игроков
+
+char skins [] = {'.', '#', '+', '*', 'X', 'O'}; // Скины
 int firstField[10][10], fakeFirstField[10][10];
 int secondField[10][10], fakeSecondField[10][10];
 int x = 4, y = 4; //Координаты для перемещения
@@ -10,8 +13,7 @@ int player = 1; //Номер ходящего игрока
 int gameover = 0; //Определяет конец игры
 int allShips1 = 0;// кол-во расставленных кораблей
 int allShips2 = 0;// кол-во расставленных кораблей
-/*
-*/
+
 int main();
 
 /*Рисует одно поле*/
@@ -24,9 +26,9 @@ void printField(int field[][10]){
     printf ("-\n");
     for (int i = 0; i < 10; i++){
         printf ("%2.i|", i + 1);
+        /*Замена на символы*/
         for(int j = 0; j < 10; j++){
-            if (field[i][j] == 0) printf (". ");
-            else printf ("# ");
+            printf ("%c ", skins[field[i][j]]);
         }
         printf ("|\n");
     }
@@ -36,31 +38,39 @@ void printField(int field[][10]){
 }
 /*Проверяет можно ли поставить здесь корабль*/
 int checkShip(int field[][10], int lastField[][10], int x, int y, int typeShip, int position){
-    /*Проверка вертикального корабля*/
-    if (!position){
-        for(int i = 0; i < typeShip; i++){
-            /**/
-            if ((field[y + i][x + 1] == 1 && x != 9) || (field[y + i][x - 1] == 1 && x != 0) || lastField[y + i][x] == 1) return 0;
-            if (i == 0) {
-                if ((field[y - 1][x - 1] == 1 && x != 0) || field[y - 1][x] == 1 || (field[y - 1][x + 1] == 1 && x != 9)) return 0;
-            }
-            else if (i == typeShip - 1){
-                if ((field[y + 1 + i][x + 1] == 1 && x != 9) || field[y + 1 + i][x] == 1 || (field[y + 1 + i][x - 1] == 1 && x != 0)) return 0;
-            }
-        }
+    /*Высчитываем прямоугольник,
+    который должен быть свободен для размещения корабля,
+    затем проверяем каждую клетку*/
+    int j, i, firstMaxCheck, secondMaxCheck; 
+    /*По горизонтали
+    определяем начальные и конечные координаты*/
+    if (position){
+        j = y; 
+        firstMaxCheck = 1 + y;
+        i = x; 
+        secondMaxCheck = typeShip + x;
     }
-    /*Проверка горизонтального корабля*/
+    /*По вертикали
+    определяем начальные и конечные координаты*/
     else {
-        for(int i = 0; i < typeShip; i++){
-            if (field[y + 1][x + i] == 1 || field[y - 1][x + i] == 1) return 0;
-            if (i == 0 && x != 0) {
-                if (field[y + 1][x - 1] == 1 || field[y][x - 1] == 1 || field[y - 1][x - 1] == 1) return 0;
-            }
-            else if (i == typeShip - 1 && ( x + typeShip) <= 9){
-                if (field[y + 1][x + 1 + i] == 1 || field[y][x + 1 + i] == 1 || field[y - 1][x + 1 + i] == 1) return 0;
-            }
-        }
+        j = y; 
+        firstMaxCheck = typeShip + y;
+        i = x; 
+        secondMaxCheck = x + 1;
     }
+    /*Проверяем есть ли рядом стена*/
+        if (j != 0) j--;
+        int last_j = j; 
+        if (i != 0) i--;
+        /*Проверка клеток*/
+        while(i <= secondMaxCheck && i <= 9){
+            while(j <= firstMaxCheck && j <= 9){
+                if (lastField[j][i] == 1) return 0;
+                j++;
+            }
+            i++;
+            j = last_j;
+        } 
     return 1;
 }
 /*Расставляет корабли*/
@@ -269,23 +279,13 @@ void drawField (){
         printf ("%2.i|", i + 1);
         for(int j = 0; j < 10; j++){
             /*Замена значений на символы*/
-            if (fakeFirstField[i][j] == 0) printf (". ");
-            else if (fakeFirstField[i][j] == 1) printf ("# ");
-            else if (fakeFirstField[i][j] == 2) printf ("+ ");
-            else if (fakeFirstField[i][j] == 3) printf ("* ");
-            else if (fakeFirstField[i][j] == 4) printf ("X ");
-            else printf ("O ");
+            printf ("%c ", skins[fakeFirstField[i][j]]);
         }
         printf ("|     ");
         printf ("%2.i|", i + 1);
         for(int j = 0; j < 10; j++){
             /*Замена значений на символы*/
-            if (fakeSecondField[i][j] == 0) printf (". ");
-            else if (fakeSecondField[i][j] == 1) printf ("# ");
-            else if (fakeSecondField[i][j] == 2) printf ("+ ");
-            else if (fakeSecondField[i][j] == 3) printf ("* ");
-            else if (fakeSecondField[i][j] == 4) printf ("X ");
-            else printf ("O ");
+            printf ("%c ", skins[fakeSecondField[i][j]]);
         }
         printf ("|\n");
     }
@@ -296,7 +296,6 @@ void drawField (){
     printf ("-\n");
     #ifdef TEST_TWO_PLAYERS
         printf("Осталось попаданий: %i\n", allShips1);
-        printf("Осталось попаданий: %i", allShips2);
     #endif
 }
 /*Заполняет массив стандартными значениями*/
