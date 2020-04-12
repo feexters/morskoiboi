@@ -39,6 +39,7 @@ int checkShip(int field[][10], int lastField[][10], int x, int y, int typeShip, 
     /*Проверка вертикального корабля*/
     if (!position){
         for(int i = 0; i < typeShip; i++){
+            /**/
             if ((field[y + i][x + 1] == 1 && x != 9) || (field[y + i][x - 1] == 1 && x != 0) || lastField[y + i][x] == 1) return 0;
             if (i == 0) {
                 if ((field[y - 1][x - 1] == 1 && x != 0) || field[y - 1][x] == 1 || (field[y - 1][x + 1] == 1 && x != 9)) return 0;
@@ -293,7 +294,7 @@ void drawField (){
     printf ("-          ");
     for (int i = 0; i < 9; i++) printf ("--");
     printf ("-\n");
-    #ifdef TEST_TWO_PALYERS
+    #ifdef TEST_TWO_PLAYERS
         printf("Осталось попаданий: %i\n", allShips1);
         printf("Осталось попаданий: %i", allShips2);
     #endif
@@ -311,12 +312,15 @@ void startGame(){
 }
 /*Рисует уничтоженный корабль*/
 void kill(int fakeField[][10], int side, int backSide, int line){
+    /*Если однопалубник*/
     if (!line) fakeField[y][x] = 4;
+    /*Горизонтальный корабль*/
     else if (line == 1){
         for (int i = x - backSide; i <= x + side; i++){
             fakeField[y][i] = 4;
         }
     }
+    /*Вертикальный корабль*/
     else{
         for (int i = y - backSide; i <= y + side; i++){
             fakeField[i][x] = 4;
@@ -325,43 +329,56 @@ void kill(int fakeField[][10], int side, int backSide, int line){
 }
 /*Проверяет уничтожен ли корабль*/
 int checkKill(int field[][10], int fakeField[][10]){
-    if ((field[y][x - 1] != 5 && field[y][x - 1] != 0 && x != 0) || (field[y][x + 1] != 0 && x != 9)){
+    /*Определяем по какой оси расположен корабль и не является ли он однопалубным*/
+    if ((field[y][x - 1] != 5 && field[y][x - 1] != 0 && x != 0) || (field[y][x + 1] != 0 && field[y][x + 1] != 5 && x != 9)){
         int left = 0, right = 0;// край корабля отностительно точки попадания
+        /*Проверям, учичтожены ли левые части корабля*/
         while (x - left >= 0 && field[y][x - left] != 0 && field[y][x - left] != 5){
             if (field[y][x - left] == 1) return 0;
             left++;
         }
+        /*Проверям, учичтожены ли правые части корабля*/
         while (x + right <= 9 && field[y][x + right] != 0 && field[y][x + right] != 5){
             if (field[y][x + right] == 1) return 0;
             right++;
         }
+        /*Рисуем убитый корабль*/
         kill(fakeField, --right, --left, 1);
     }
-    else if ((field[y - 1][x] != 5 && field[y - 1][x] != 0 && y != 0) || (field[y + 1][x] != 0 && y != 9)){
+    /*Определяем по какой оси расположен корабль и не является ли он однопалубным*/
+    else if ((field[y - 1][x] != 5 && field[y - 1][x] != 0 && y != 0) || (field[y + 1][x] != 0 && field[y + 1][x] != 5 && y != 9)){
         int up = 0, down = 0;// край корабля отностительно точки попадания
+        /*Проверям, учичтожены ли верхние части корабля*/
         while (y - up >= 0 && field[y - up][x] != 0 && field[y - up][x] != 5){
             if (field[y - up][x] == 1) return 0;
             up++;
         }
+        /*Проверям, учичтожены ли нижние части корабля*/
         while (y + down <= 9 && field[y + down][x] != 0 && field[y + down][x] != 5){
             if (field[y + down][x] == 1) return 0;
             down++;
         }
+        /*Рисуем убитый корабль*/
         kill(fakeField, --down, --up, 2);
     }
+    /*Если это однопалубник*/
     else kill(fakeField, 0, 0, 0);
 }
 /*Определяет есть ли попадание*/
 int shot(int field[][10], int fakeField[][10], int *allShips){
+    /*Промах*/
     if (field[y][x] == 0){
         field[y][x] = 5;
         fakeField[y][x] = 5;
         return 0;
     }
+    /*Попал*/
     else if (field[y][x] == 1) {
         field[y][x] = 3;
         fakeField[y][x] = field[y][x];
+        /*Проверка на убийство*/
         checkKill(field, fakeField);
+        /*Сокращаем кол-во кораблей*/
         --*(allShips);
         return 1;
     }
@@ -375,21 +392,26 @@ int lastSymbol = 0; // Начальное значение для последнего символа поля
 /*Рисует перемещение прицела*/
 int paintMove (int fakeField[][10], char choose){
     /*Проверяем направление и отсутствие выхода за пределы поля*/
+    /*Вверх*/
     if (choose == 'w' && y != 0) {
         fakeField[y][x] = lastSymbol;
         y--;
         }
+    /*Влево*/
     else if (choose == 'a' && x != 0) {
         fakeField[y][x] = lastSymbol;
         x--;
         }
+    /*Вниз*/
     else if (choose == 's' && y != 9) {
         fakeField[y][x] = lastSymbol;
         y++;}
+    /*Вправо*/
     else if (choose == 'd' && x != 9) {
         fakeField[y][x] = lastSymbol;
         x++;
         }
+    /*Выход за пределы поля*/
     else return 0;
     lastSymbol = fakeField[y][x];
     fakeField[y][x] = 2;
