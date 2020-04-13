@@ -1,7 +1,10 @@
+//gcc morb.c check.c - компиляция
 #include "stdio.h"
 #include "ctype.h"
+#include "check.h"// checkKill & checkShip
 #include "stdlib.h" //Для функции system()
 #include "conio.h"// getch(), khbit()
+
 
 //#define TEST_TWO_PLAYERS //- запус программы в режиме тестирования для двух игроков
 
@@ -9,10 +12,10 @@ struct player{
     int field[10][10];// Поле с кораблями
     int fakeField[10][10];// Выводимое поле
     int allShips;// кол-во расставленных кораблей
-} first, second;
+} players[2];
 char skins [] = {'.', '#', '+', '*', 'X', 'O'}; // Скины
 int x = 4, y = 4; //Координаты для перемещения
-int player = 1; //Номер ходящего игрока 
+int player = 0; //Номер ходящего игрока 
 
 int main();
 
@@ -35,43 +38,6 @@ void printField(int field[][10]){
     printf ("   ");
     for (int i = 0; i < 9; i++) printf ("--");
     printf ("-\n");
-}
-/*Проверяет можно ли поставить здесь корабль*/
-int checkShip(int field[][10], int lastField[][10], int x, int y, int typeShip, int position){
-    /*Высчитываем прямоугольник,
-    который должен быть свободен для размещения корабля,
-    затем проверяем каждую клетку*/
-    int j, i, firstMaxCheck, secondMaxCheck; 
-    /*По горизонтали
-    определяем начальные и конечные координаты*/
-    if (position){
-        j = y; 
-        firstMaxCheck = 1 + y;
-        i = x; 
-        secondMaxCheck = typeShip + x;
-    }
-    /*По вертикали
-    определяем начальные и конечные координаты*/
-    else {
-        j = y; 
-        firstMaxCheck = typeShip + y;
-        i = x; 
-        secondMaxCheck = x + 1;
-    }
-    /*Проверяем есть ли рядом стена*/
-        if (j != 0) j--;
-        int last_j = j; 
-        if (i != 0) i--;
-        /*Проверка клеток*/
-        while(i <= secondMaxCheck && i <= 9){
-            while(j <= firstMaxCheck && j <= 9){
-                if (lastField[j][i] == 1) return 0;
-                j++;
-            }
-            i++;
-            j = last_j;
-        } 
-    return 1;
 }
 /*Расставляет корабли*/
 void putShip(int field[][10], int typeShip){
@@ -271,13 +237,13 @@ void drawField (){
         printf ("%2.i|", i + 1);
         for(int j = 0; j < 10; j++){
             /*Замена значений на символы*/
-            printf ("%c ", skins[first.fakeField[i][j]]);
+            printf ("%c ", skins[players[0].fakeField[i][j]]);
         }
         printf ("|     ");
         printf ("%2.i|", i + 1);
         for(int j = 0; j < 10; j++){
             /*Замена значений на символы*/
-            printf ("%c ", skins[second.fakeField[i][j]]);
+            printf ("%c ", skins[players[1].fakeField[i][j]]);
         }
         printf ("|\n");
     }
@@ -287,73 +253,19 @@ void drawField (){
     for (int i = 0; i < 9; i++) printf ("--");
     printf ("-\n");
     #ifdef TEST_TWO_PLAYERS
-        printf("Осталось попаданий: %i\n", first.allShips);
+        printf("Осталось попаданий: %i\n", players[0].allShips);
     #endif
 }
 /*Заполняет массив стандартными значениями*/
 void startGame(){
     for (int i = 0; i < 10; i++){
         for(int j = 0; j < 10; j++){
-            first.field[i][j] = 0;
-            second.field[i][j] = 0;
-            first.fakeField[i][j] = 0;
-            second.fakeField[i][j] = 0;
+            players[0].field[i][j] = 0;
+            players[1].field[i][j] = 0;
+            players[0].fakeField[i][j] = 0;
+            players[1].fakeField[i][j] = 0;
         }
     }
-}
-/*Рисует уничтоженный корабль*/
-void kill(int fakeField[][10], int side, int backSide, int line){
-    /*Если однопалубник*/
-    if (!line) fakeField[y][x] = 4;
-    /*Горизонтальный корабль*/
-    else if (line == 1){
-        for (int i = x - backSide; i <= x + side; i++){
-            fakeField[y][i] = 4;
-        }
-    }
-    /*Вертикальный корабль*/
-    else{
-        for (int i = y - backSide; i <= y + side; i++){
-            fakeField[i][x] = 4;
-        }
-    }
-}
-/*Проверяет уничтожен ли корабль*/
-int checkKill(int field[][10], int fakeField[][10]){
-    /*Определяем по какой оси расположен корабль и не является ли он однопалубным*/
-    if ((field[y][x - 1] != 5 && field[y][x - 1] != 0 && x != 0) || (field[y][x + 1] != 0 && field[y][x + 1] != 5 && x != 9)){
-        int left = 0, right = 0;// край корабля отностительно точки попадания
-        /*Проверям, учичтожены ли левые части корабля*/
-        while (x - left >= 0 && field[y][x - left] != 0 && field[y][x - left] != 5){
-            if (field[y][x - left] == 1) return 0;
-            left++;
-        }
-        /*Проверям, учичтожены ли правые части корабля*/
-        while (x + right <= 9 && field[y][x + right] != 0 && field[y][x + right] != 5){
-            if (field[y][x + right] == 1) return 0;
-            right++;
-        }
-        /*Рисуем убитый корабль*/
-        kill(fakeField, --right, --left, 1);
-    }
-    /*Определяем по какой оси расположен корабль и не является ли он однопалубным*/
-    else if ((field[y - 1][x] != 5 && field[y - 1][x] != 0 && y != 0) || (field[y + 1][x] != 0 && field[y + 1][x] != 5 && y != 9)){
-        int up = 0, down = 0;// край корабля отностительно точки попадания
-        /*Проверям, учичтожены ли верхние части корабля*/
-        while (y - up >= 0 && field[y - up][x] != 0 && field[y - up][x] != 5){
-            if (field[y - up][x] == 1) return 0;
-            up++;
-        }
-        /*Проверям, учичтожены ли нижние части корабля*/
-        while (y + down <= 9 && field[y + down][x] != 0 && field[y + down][x] != 5){
-            if (field[y + down][x] == 1) return 0;
-            down++;
-        }
-        /*Рисуем убитый корабль*/
-        kill(fakeField, --down, --up, 2);
-    }
-    /*Если это однопалубник*/
-    else kill(fakeField, 0, 0, 0);
 }
 /*Определяет есть ли попадание*/
 int shot(int field[][10], int fakeField[][10], int *allShips){
@@ -368,7 +280,7 @@ int shot(int field[][10], int fakeField[][10], int *allShips){
         field[y][x] = 3;
         fakeField[y][x] = field[y][x];
         /*Проверка на убийство*/
-        checkKill(field, fakeField);
+        checkKill(field, fakeField, x, y);
         /*Сокращаем кол-во кораблей*/
         --*(allShips);
         return 1;
@@ -421,20 +333,12 @@ void move(int field[][10], int fakeField[][10], int *allShips){
             if (hit != 2) lastSymbol = fakeField[y][x];
             /*Меняем игрока*/
             if (!hit){
-                if (player == 1) {
-                    player = 2;
+                if (player == 0) player = 1;
+                else player = 0;
                     /*Возвращаем начальные значения координатам*/
                     x = 4;
                     y = 4; 
-                    lastSymbol = second.fakeField[y][x];
-                }
-                else {
-                    player = 1;
-                    /*Возвращаем начальные значения координатам*/
-                    x = 4;
-                    y = 4; 
-                    lastSymbol = first.fakeField[y][x];
-                }
+                    lastSymbol = players[player].fakeField[y][x];
                 drawField();
             }
          }
@@ -450,39 +354,38 @@ void twoPlayers(){
     printf(" иначе он будет знать, где расположены ваши корабли.\n\n\n");
     system ("pause");
     /*Расстановка кораблей для первого игрока*/
-    ships(first.field, 1);
-    first.allShips = 20;
+    ships(players[0].field, 1);
+    players[0].allShips = 20;
     system("cls");
     #ifdef TEST_TWO_PLAYERS
-        first.allShips = 10;
+        players[0].allShips = 10;
     #else 
         printf("         ВТОРОЙ игрок расставляет корабли.\n");
         printf("Проследите, чтобы первый игрок не смотрел на монитор, \n");
         printf(" иначе он будет знать, где расположены ваши корабли.\n\n\n");
         system ("pause");
         /*Расстановка кораблей для второго игрока*/
-        ships(second.field, 2);
+        ships(players[1].field, 2);
     #endif
-    second.allShips = 20;
+    players[1].allShips = 20;
     #ifdef TEST_TWO_PLAYERS
         /*Показываем расположения кораблей*/
         for (int i = 0; i < 10; i++){
             for(int j = 0; j < 10; j++){
-                first.fakeField[i][j] = first.field[i][j];
+                players[0].fakeField[i][j] = players[0].field[i][j];
             }
         }
     #endif
     drawField();
     lastSymbol = 0;
     /*Игра продолжается пока не закончатся корабли*/
-    while (first.allShips && second.allShips){
+    while (players[0].allShips && players[1].allShips){
         /*Ход игрока*/
-        if (player == 1) move(first.field, first.fakeField, &first.allShips);
-        else move(second.field, second.fakeField, &second.allShips);
+        move(players[player].field, players[player].fakeField, &players[player].allShips);
     }
     system ("cls");
     /*Завершение игры и вывод результатов*/
-    if (!second.allShips){
+    if (!players[1].allShips){
         printf ("Победил ПЕРВЫЙ игрок!!!\n");
         printf ("    КОНЕЦ ИГРЫ\n\n");
         system("pause");
