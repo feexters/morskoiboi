@@ -2,7 +2,7 @@
 #include "stdlib.h"
 #include "functions/CheckAndDraw.h"
 
-char skins [] = {'.', '#', '+', '*', 'X', 'O'}; // Скины
+char skins [] = {'.', '#', '+', '*', 'X', 'O', '.', '.', '.', '.'}; // Скины
 
 /*Очистка поля от "мусора"*/
 void clearField(int field[][10]){
@@ -33,7 +33,7 @@ void printField(int field[][10]){
     printf ("-\n");
 }
 /*Рисует игровое поле*/
-void drawField(int firstField[][10], int secondField[][10], int fakeFirstField[][10], int fakeSecondField[][10]){
+void drawField(int firstField[][10], int secondField[][10]){
     system("cls");
     printf ("   ");
     for (int i = 0; i < 10; i++) printf ("%c ", 'A' + i);
@@ -47,11 +47,11 @@ void drawField(int firstField[][10], int secondField[][10], int fakeFirstField[]
     for (int i = 0; i < 10; i++){
         printf ("%2.i|", i + 1);
         for(int j = 0; j < 10; j++){
-             #ifdef TEST
+            #ifdef TEST
                 printf ("%i ", firstField[i][j]);
             #else
                 /*Замена значений на символы*/
-                printf ("%c ", skins[fakeFirstField[i][j]]);
+                printf ("%c ", skins[firstField[i][j]]);
             #endif
         }
         printf ("|     ");
@@ -59,9 +59,11 @@ void drawField(int firstField[][10], int secondField[][10], int fakeFirstField[]
         for(int j = 0; j < 10; j++){
             #ifdef TEST
                 printf ("%i ", secondField[i][j]);
+            #elif TEST_AI
+                printf ("%i ", secondField[i][j]);
             #else
                 /*Замена значений на символы*/
-                printf ("%c ", skins[fakeSecondField[i][j]]);
+                printf ("%c ", skins[secondField[i][j]]);
             #endif
             }
         printf ("|\n");

@@ -14,7 +14,7 @@ void kill(int fakeField[][10], int side, int backSide, int line, int x, int y);
 void printField(int field[][10]);
 
 /*Рисует игровое поле*/
-void drawField(int firstField[][10], int secondField[][10], int fakeFirstField[][10], int fakeSecondField[][10]);
+void drawField(int firstField[][10], int secondField[][10]);
 
 /*Очистка поля от "мусора"*/
 void clearField(int field[][10]);

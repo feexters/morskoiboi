@@ -1,13 +1,14 @@
-/*gcc morb.c check.c - компиляция*/
-#define RAND_MAX 99
-#include "stdio.h"
+/*gcc morb.c CheckAndDraw.c - компиляция*/
+#include <stdio.h>
 #include "ctype.h"
+#include "time.h"
 #include "stdlib.h" //Для функции system(), rand()
 #include "conio.h" // getch(), khbit()
 /*Библиотека с функциями для рисования полей
 и проверок условий*/
 #include "functions/CheckAndDraw.h"
 //#define TEST //- запус программы в режиме тестирования
+//#define TEST //- запус программы в режиме тестирования ИИ
 
 struct player{
     int field[10][10];// Поле с кораблями
@@ -20,9 +21,9 @@ int lastSymbol = 0; // Начальное значение для последнего символа поля
 
 int main();
 void draw(){
-    drawField(players[0].field, players[1].field, players[0].fakeField, players[1].fakeField);
+    drawField(players[0].field, players[1].field);
 }
-/*Рисуем невидимые символы недающие поставить корабль на это место*/
+/*Рисуем невидимые символы, недающие поставить корабль на это место*/
 void printInvisibleSymbols(int field[][10], int typeShip){
         /*Высчитываем прямоугольник вокруг корабля,
     затем заполням невидимыми символами*/
@@ -57,13 +58,22 @@ void printInvisibleSymbols(int field[][10], int typeShip){
         j = last_j;
     } 
 }
+/*Ставит корабль*/
 void intelligencePutShip(int field[][10], int typeShip){
     int i = 0;
     int allPositions = 0, choosePosition, route; 
     int canPut[100]; //Содержит доступные места для расстановки 
     /*Выбираем подходящие места*/
+    #ifdef TEST_AI
+        printf("\nДоступные координаты: ");
+    #endif
     while(i < 100){
-        if (field[i/10][i%10] >= 6 && field[i/10][i%10] <= 8) canPut[allPositions++] = i;
+        if (field[i/10][i%10] >= 6 && field[i/10][i%10] <= 8) {
+            canPut[allPositions++] = i;
+            #ifdef TEST_AI
+            printf("%i ", canPut[allPositions - 1]);
+            #endif
+        }
         i++;
     }
     /*Рандомно выбираем места из доступного списка*/
@@ -71,16 +81,23 @@ void intelligencePutShip(int field[][10], int typeShip){
     /*Выбираем по вертикали или горизонтали*/
     x = choosePosition % 10;
     y = choosePosition / 10;
-    if (field[y][x] == 8) route = rand()%2; 
+    if (field[y][x] == 8) route = rand()%2;
     else route = field[y][x] - 6;
     /*Рисуем корабль*/
-    if (!route){
+    if (route){
         for(int j = y; j < y + typeShip; j++) field[j][x] = 1;
     } 
     else {
         for(int j = x; j < x + typeShip; j++) field[y][j] = 1;
     }
     printInvisibleSymbols(field, typeShip);
+    #ifdef TEST_AI
+        printf("\nВыбранная позиция: %i\n", choosePosition);
+        printf("x: %i\n", x);
+        printf("y: %i\n", y);
+        printf("Направление: %i\n", route);
+        system("pause");
+    #endif  
 }
 /*Полный анализ поля на возможные расстановки
         Значения клетки:
@@ -89,17 +106,27 @@ void intelligencePutShip(int field[][10], int typeShip){
 8 - все два варианта расстановки
 9 - поставить корабль нельзя*/
 int intelligenceAnalysis(int field[][10], int typeShip){
+    /*Анализ по горизонтали*/
     for(y = 0; y < 10; y++){
         for(x = 0; x <= 10 - typeShip; x++){
-            if (checkShip(field, field, x, y, typeShip, 1))
-                field[y][x] = 6;
+            /*Пропускаяем неподходящие*/
+            if(field[y][x] != 9 && field[y][x] != 9){
+                /*Фиксируем результат проверки*/
+                if (checkShip(field, field, x, y, typeShip, 1))
+                    field[y][x] = 6;
+            }
         }
     }
+    /*Анализ по вертикали*/
      for(int x = 0; x < 10; x++){
         for(int y = 0; y <= 10 - typeShip; y++){
-            if (checkShip(field, field, x, y, typeShip, 0)){
-                if (field[y][x] == 6) field[y][x] += 2;
-                else field[y][x] = 7;
+            /*Пропускаяем неподходящие*/
+            if(field[y][x] != 9 && field[y][x] != 9){
+                /*Фиксируем результат проверки*/
+                if (checkShip(field, field, x, y, typeShip, 0)){
+                    if (field[y][x] == 6) field[y][x] += 2;
+                    else field[y][x] = 7;
+                }
             }
         }
     }
@@ -112,11 +139,15 @@ void intelligenceShips(int field[][10]){
     for (int i = 0; i < 10; i++){
         printf("%i", i);
         intelligenceAnalysis(field, ships[i]);
+        #ifdef TEST_AI
         draw();
         system("pause");
+        #endif
         intelligencePutShip(field, ships[i]);
+        #ifdef TEST_AI
         draw();
         system("pause");
+        #endif
         clearField(field);
     }
 }
@@ -281,6 +312,8 @@ void ships(int field[][10]){
     int result = 0;
     #ifdef TEST
         result = 10;
+    #elif TEST_AI
+        result = 20;
     #endif
     while (result < 20){
         system("cls");
@@ -466,6 +499,14 @@ void onePlayer(){
         /*Показываем расположения кораблей*/
         for (int i = 0; i < 10; i++){
             for(int j = 0; j < 10; j++){
+                players[0].fakeField[i][j] = players[0].field[i][j];
+                players[1].fakeField[i][j] = players[1].field[i][j];
+            }
+        }
+    #elif TEST_AI
+        /*Показываем расположения кораблей*/
+        for (int i = 0; i < 10; i++){
+            for(int j = 0; j < 10; j++){
                 players[1].fakeField[i][j] = players[1].field[i][j];
             }
         }
@@ -496,6 +537,7 @@ void onePlayer(){
     }
 }
 int main(){
+    srand(time(NULL));// Для генерации псевдо случайных чисел
     /*Меню игры*/
     system("cls");
     printf ("     МОРСКОЙ БОЙ\n\n");
