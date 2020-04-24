@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "check.h"
+#include "functions/check.h"
 
 /*Рисует уничтоженный корабль*/
 void kill(int fakeField[][10], int side, int backSide, int line, int x, int y){
