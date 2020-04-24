@@ -1,6 +1,77 @@
 #include <stdio.h>
-#include "functions/check.h"
+#include "stdlib.h"
+#include "functions/CheckAndDraw.h"
 
+char skins [] = {'.', '#', '+', '*', 'X', 'O'}; // Скины
+
+/*Очистка поля от "мусора"*/
+void clearField(int field[][10]){
+    for(int i = 0; i < 10; i++){
+        for(int j = 0; j <= 10; j++){
+            if(field[i][j] != 9 && field[i][j] != 1) field[i][j] = 0;
+        }
+    }
+}
+/*Рисует одно поле*/
+void printField(int field[][10]){
+    system("cls");
+    printf ("   ");
+    for (int i = 0; i < 10; i++) printf ("%c ", 'A' + i);
+    printf ("\n   ");
+    for (int i = 0; i < 9; i++) printf ("--");
+    printf ("-\n");
+    for (int i = 0; i < 10; i++){
+        printf ("%2.i|", i + 1);
+        /*Замена на символы*/
+        for(int j = 0; j < 10; j++){
+            printf ("%c ", skins[field[i][j]]);
+        }
+        printf ("|\n");
+    }
+    printf ("   ");
+    for (int i = 0; i < 9; i++) printf ("--");
+    printf ("-\n");
+}
+/*Рисует игровое поле*/
+void drawField(int firstField[][10], int secondField[][10], int fakeFirstField[][10], int fakeSecondField[][10]){
+    system("cls");
+    printf ("   ");
+    for (int i = 0; i < 10; i++) printf ("%c ", 'A' + i);
+    printf ("         ");
+    for (int i = 0; i < 10; i++) printf ("%c ", 'A' + i);
+    printf ("\n   ");
+    for (int i = 0; i < 9; i++) printf ("--");
+    printf ("-          ");
+    for (int i = 0; i < 9; i++) printf ("--");
+    printf ("-\n");
+    for (int i = 0; i < 10; i++){
+        printf ("%2.i|", i + 1);
+        for(int j = 0; j < 10; j++){
+             #ifdef TEST
+                printf ("%i ", firstField[i][j]);
+            #else
+                /*Замена значений на символы*/
+                printf ("%c ", skins[fakeFirstField[i][j]]);
+            #endif
+        }
+        printf ("|     ");
+        printf ("%2.i|", i + 1);
+        for(int j = 0; j < 10; j++){
+            #ifdef TEST
+                printf ("%i ", secondField[i][j]);
+            #else
+                /*Замена значений на символы*/
+                printf ("%c ", skins[fakeSecondField[i][j]]);
+            #endif
+            }
+        printf ("|\n");
+    }
+    printf ("   ");
+    for (int i = 0; i < 9; i++) printf ("--");
+    printf ("-          ");
+    for (int i = 0; i < 9; i++) printf ("--");
+    printf ("-\n");
+}
 /*Рисует уничтоженный корабль*/
 void kill(int fakeField[][10], int side, int backSide, int line, int x, int y){
     /*Если однопалубник*/

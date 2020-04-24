@@ -2,9 +2,11 @@
 #define RAND_MAX 99
 #include "stdio.h"
 #include "ctype.h"
-#include "functions/check.h"// checkKill & checkShip
 #include "stdlib.h" //Для функции system(), rand()
 #include "conio.h" // getch(), khbit()
+/*Библиотека с функциями для рисования полей
+и проверок условий*/
+#include "functions/CheckAndDraw.h"
 //#define TEST //- запус программы в режиме тестирования
 
 struct player{
@@ -12,59 +14,18 @@ struct player{
     int fakeField[10][10];// Выводимое поле
     int allShips;// кол-во расставленных кораблей
 } players[2];
-char skins [] = {'.', '#', '+', '*', 'X', 'O'}; // Скины
 int x = 4, y = 4; //Координаты для перемещения
 int player = 0; //Номер ходящего игрока 
 int lastSymbol = 0; // Начальное значение для последнего символа поля
 
 int main();
-/*Рисует игровое поле*/
-void drawField(){
-    system("cls");
-    printf ("   ");
-    for (int i = 0; i < 10; i++) printf ("%c ", 'A' + i);
-    printf ("         ");
-    for (int i = 0; i < 10; i++) printf ("%c ", 'A' + i);
-    printf ("\n   ");
-    for (int i = 0; i < 9; i++) printf ("--");
-    printf ("-          ");
-    for (int i = 0; i < 9; i++) printf ("--");
-    printf ("-\n");
-    for (int i = 0; i < 10; i++){
-        printf ("%2.i|", i + 1);
-        for(int j = 0; j < 10; j++){
-             #ifdef TEST
-                printf ("%i ", players[0].fakeField[i][j]);
-            #else
-                /*Замена значений на символы*/
-                printf ("%c ", skins[players[0].fakeField[i][j]]);
-            #endif
-        }
-        printf ("|     ");
-        printf ("%2.i|", i + 1);
-        for(int j = 0; j < 10; j++){
-            #ifdef TEST
-                printf ("%i ", players[1].field[i][j]);
-            #else
-                /*Замена значений на символы*/
-                printf ("%c ", skins[players[1].field[i][j]]);
-            #endif
-            }
-        printf ("|\n");
-    }
-    printf ("   ");
-    for (int i = 0; i < 9; i++) printf ("--");
-    printf ("-          ");
-    for (int i = 0; i < 9; i++) printf ("--");
-    printf ("-\n");
-    #ifdef TEST
-        printf("Осталось попаданий: %i\n", players[0].allShips);
-    #endif
+void draw(){
+    drawField(players[0].field, players[1].field, players[0].fakeField, players[1].fakeField);
 }
+/*Рисуем невидимые символы недающие поставить корабль на это место*/
 void printInvisibleSymbols(int field[][10], int typeShip){
-        /*Высчитываем прямоугольник,
-    который должен быть свободен для размещения корабля,
-    затем проверяем каждую клетку*/
+        /*Высчитываем прямоугольник вокруг корабля,
+    затем заполням невидимыми символами*/
     int j, i, firstMaxCheck, secondMaxCheck; 
     /*По горизонтали
     определяем начальные и конечные координаты*/
@@ -95,14 +56,6 @@ void printInvisibleSymbols(int field[][10], int typeShip){
         i++;
         j = last_j;
     } 
-}
-/*Очистка поля от "мусора"*/
-void clearField(int field[][10]){
-    for(int i = 0; i < 10; i++){
-        for(int j = 0; j <= 10; j++){
-            if(field[i][j] != 9 && field[i][j] != 1) field[i][j] = 0;
-        }
-    }
 }
 void intelligencePutShip(int field[][10], int typeShip){
     int i = 0;
@@ -135,42 +88,6 @@ void intelligencePutShip(int field[][10], int typeShip){
 7 - можно поставить по вертикали
 8 - все два варианта расстановки
 9 - поставить корабль нельзя*/
-int intelligenceAnalysis11231(int field[][10], int typeShip){
-    for(int i = 0; i < 10; i++){
-        for(int j = 0; j < 10 - typeShip; j++){
-            /*Проверка каждого символа по вертикали*/
-            for (int checkPlace = 0; checkPlace < typeShip; checkPlace++){
-                if (field[i][j + checkPlace] == 9 || field[i][j + checkPlace] == 1){
-                    j += checkPlace;
-                    /*пропускаем лишние клетки*/
-                    while(field[i][j + checkPlace] == 9 || field[i][j + checkPlace] == 1 || j < 10 - typeShip) j++;
-                    break;
-                }
-                /*Можно поставить по горизонтали*/
-                else if (checkPlace + 1 == typeShip)
-                    field[i][j] = 6;
-            }
-        }
-    }
-     for(int i = 0; i < 10; i++){
-        for(int j = 0; j < 10 - typeShip; j++){
-            /*Проверка каждого символа по вертикали*/
-            for (int checkPlace = 1; checkPlace < typeShip; checkPlace++){
-                if (field[j + checkPlace][i] == 9){
-                    j += checkPlace;
-                    /*пропускаем лишние клетки*/
-                    while(field[j + checkPlace][i] == 9 || field[j + checkPlace][i] == 1 || j < 10 - typeShip) j++;
-                    j--; 
-                    break;
-                }
-                /*Можно поставить по горизонтали*/
-                else if (checkPlace + 1 == typeShip)
-                    if (field[j][i] == 6) field[j][i] += 2;
-                    else field[j][i] = 7;
-            }
-        }
-    }
-}
 int intelligenceAnalysis(int field[][10], int typeShip){
     for(y = 0; y < 10; y++){
         for(x = 0; x <= 10 - typeShip; x++){
@@ -195,34 +112,15 @@ void intelligenceShips(int field[][10]){
     for (int i = 0; i < 10; i++){
         printf("%i", i);
         intelligenceAnalysis(field, ships[i]);
-        drawField();
+        draw();
         system("pause");
         intelligencePutShip(field, ships[i]);
-        drawField();
+        draw();
         system("pause");
         clearField(field);
     }
 }
-/*Рисует одно поле*/
-void printField(int field[][10]){
-    system("cls");
-    printf ("   ");
-    for (int i = 0; i < 10; i++) printf ("%c ", 'A' + i);
-    printf ("\n   ");
-    for (int i = 0; i < 9; i++) printf ("--");
-    printf ("-\n");
-    for (int i = 0; i < 10; i++){
-        printf ("%2.i|", i + 1);
-        /*Замена на символы*/
-        for(int j = 0; j < 10; j++){
-            printf ("%c ", skins[field[i][j]]);
-        }
-        printf ("|\n");
-    }
-    printf ("   ");
-    for (int i = 0; i < 9; i++) printf ("--");
-    printf ("-\n");
-}
+
 /*Расставляет корабли*/
 void putShip(int field[][10], int typeShip){
     int result = 0;
@@ -467,7 +365,7 @@ int paintMove (int fakeField[][10], char choose){
     else return 0;
     lastSymbol = fakeField[y][x];
     fakeField[y][x] = 2;
-    drawField();
+    draw();
 }
 /*Управление во время стрельбы*/
 void move(int field[][10], int fakeField[][10], int *allShips){
@@ -488,7 +386,7 @@ void move(int field[][10], int fakeField[][10], int *allShips){
                     x = 4;
                     y = 4; 
                     lastSymbol = players[player].fakeField[y][x];
-                drawField();
+                draw();
             }
          }
     }
@@ -525,7 +423,7 @@ void twoPlayers(){
             }
         }
     #endif
-    drawField();
+    draw();
     lastSymbol = 0;
     /*Игра продолжается пока не закончатся корабли*/
     while (players[0].allShips && players[1].allShips){
@@ -572,7 +470,7 @@ void onePlayer(){
             }
         }
     #endif
-    drawField();
+    draw();
     system("pause");
     lastSymbol = 0;
     /*Игра продолжается пока не закончатся корабли*/
