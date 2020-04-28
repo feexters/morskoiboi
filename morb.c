@@ -33,10 +33,10 @@ int lastSymbol = 0; // Начальное значение для последнего символа поля
 
 int main();
 int intelligenceAnalysis(int field[][10], int typeShip);
-int shot(int field[][10], int fakeField[][10], int *allShips);
+int shot(int field[][10], int fakeField[][10], int *allShips, int x, int y);
 /*Рисует игровое поле*/
 void draw(){
-    drawField(players[0].fakeField, players[1].fakeField);
+    drawField(players[0].fakeField, players[1].fakeField, players[0].allShips, players[1].allShips);
 }
 /*Проверяет оставшиеся корабли*/
 void remainingShips(int killTypeShip){
@@ -55,10 +55,10 @@ int AnalysisForShot(int field[][10],int routes[], int minTypeShip, int maxTypeSh
     int positions = 0; // По какой оси располжен
     for (int i = 0; i < 4; i++) routes[i] = 0; 
     /*Проверяем количество доступных для стрельбы клеток в 4-х направлениях*/
-    for (int i = y + 1; i < y + maxTypeShip && field [i][x] != 5 && field[i][x] && i <= 9; i++) routes[0] ++; //вниз
-    for (int i = y - 1; i > y - maxTypeShip && field [i][x] != 5 && field[i][x] && i >= 0; i--) routes[1] ++; //вверх
-    for (int i = x + 1; i < x + maxTypeShip && field [y][i] != 5 && field[y][i] && i <= 9; i++) routes[2] ++; //вправо
-    for (int i = x - 1; i > x - maxTypeShip && field [y][i] != 5 && field[y][i] && i >= 0; i--) routes[3] ++; //влево
+    for (int i = y + 1; i < y + maxTypeShip && field [i][x] != 5 && field[i][x] != 9 && i <= 9; i++) routes[0] ++; //вниз
+    for (int i = y - 1; i > y - maxTypeShip && field [i][x] != 5 && field[i][x] != 9 && i >= 0; i--) routes[1] ++; //вверх
+    for (int i = x + 1; i < x + maxTypeShip && field [y][i] != 5 && field[y][i] != 9 && i <= 9; i++) routes[2] ++; //вправо
+    for (int i = x - 1; i > x - maxTypeShip && field [y][i] != 5 && field[y][i] != 9 && i >= 0; i--) routes[3] ++; //влево
     /*Проверям возможные направления размещения корабля*/
     if (routes[0] + routes[1] >= minTypeShip - 1) positions ++;
     if (routes[2] + routes[3] >= minTypeShip - 1) positions += 2;
@@ -69,7 +69,7 @@ int AnalysisForShot(int field[][10],int routes[], int minTypeShip, int maxTypeSh
 }
 /*Если попадание было не смертельным, 
 то функция будет добивать, пытаясь угадать расположение корабля*/
-int intelligenceRoadToKill(int routes[], int position, int field[][10]){
+int intelligenceRoadToKill(int routes[], int *position, int field[][10]){
     int canShot[4];// места для стрельбы
     int allPlaces = 0; // всего ест для стрельбы
     int chosePlace, result; // выбранное место, результат стрельбы
@@ -77,7 +77,7 @@ int intelligenceRoadToKill(int routes[], int position, int field[][10]){
         printf("\nВозможные направления: %i, %i, %i, %i", routes[0], routes[1], routes[2], routes[3]);
     #endif
     /*Определяем доступные направления для стрельбы*/
-    if (position == 1 || position == 3){
+    if (*position == 1 || *position == 3){
         /*вниз*/
         if(routes[0]) 
             canShot[allPlaces++] = 1;
@@ -85,7 +85,7 @@ int intelligenceRoadToKill(int routes[], int position, int field[][10]){
         if(routes[1]) 
             canShot[allPlaces++] = 2;
     }
-    if (position == 2 || position == 3){
+    if (*position == 2 || *position == 3){
         /*вправо*/
         if(routes[2]) 
             canShot[allPlaces++] = 3;
@@ -120,9 +120,9 @@ int intelligenceRoadToKill(int routes[], int position, int field[][10]){
         printf("\nВыбранное направление: %i", chosePlace);
         printf("\nВыбранное место: y = %i, x = %i", y, x);
         system("pause");
-        drawField(players[0].field, players[1].fakeField);
+        drawField(players[0].field, players[1].fakeField, players[0].allShips, players[1].allShips);
     #endif
-    result = shot(players[0].field, field, &players[0].allShips);
+    result = shot(players[0].field, field, &players[0].allShips, x, y);
     /*Промах*/
     if (!result) {
         routes[chosePlace - 1] = 0;
@@ -144,8 +144,8 @@ int intelligenceRoadToKill(int routes[], int position, int field[][10]){
     else if (result == 1) {
         memoryAI.allHits++;
         routes[chosePlace - 1]--;
-        if(chosePlace - 1 == 0 || chosePlace - 1 == 1) position = 1;
-        else position = 2;
+        if(chosePlace - 1 == 0 || chosePlace - 1 == 1) *position = 1;
+        else *position = 2;
     }
     return result;
 }
@@ -153,7 +153,7 @@ int intelligenceRoadToKill(int routes[], int position, int field[][10]){
 int intelligenceShot(int field[][10]){
     int result; //результат выстрела
     /*Если есть недобитый корабль*/
-    if (memoryAI.lastShot == 1) result = intelligenceRoadToKill(memoryAI.routes, memoryAI.position, field);
+    if (memoryAI.lastShot == 1) result = intelligenceRoadToKill(memoryAI.routes, &memoryAI.position, field);
     /*Расположение корабля неизвестно*/
     else {
         /*Полный анализ поля*/
@@ -176,13 +176,13 @@ int intelligenceShot(int field[][10]){
         x = chosePlace % 10;
         y = chosePlace / 10;
         /*Результат стрельбы*/
-        result = shot(players[0].field, field, &players[0].allShips);
+        result = shot(players[0].field, field, &players[0].allShips, x, y);
         if (!result) {
             player = 0; // Сменяем игроков
             /*Возвращаем начальные значения координатам*/
             x = 4;
             y = 4; 
-            lastSymbol = players[player].fakeField[y][x];    
+            lastSymbol = players[1].fakeField[y][x];    
         }
         /*Фиксируем попадание*/
         else if (result == 1){
@@ -288,12 +288,12 @@ void intelligenceShips(int field[][10]){
         printf("%i", i);
         intelligenceAnalysis(field, ships[i]);
         #ifdef TEST_AI
-        drawField(players[0].fakeField, players[1].field);
+        drawField(players[0].fakeField, players[1].field, players[0].allShips, players[1].allShips);
         system("pause");
         #endif
         intelligencePutShip(field, ships[i]);
         #ifdef TEST_AI
-        drawField(players[0].fakeField, players[1].field);
+        drawField(players[0].fakeField, players[1].field, players[0].allShips, players[1].allShips);
         system("pause");
         #endif
         clearField(field);
@@ -504,7 +504,7 @@ void startGame(int gameMode){
     }
 }
 /*Определяет есть ли попадание*/
-int shot(int field[][10], int fakeField[][10], int *allShips){
+int shot(int field[][10], int fakeField[][10], int *allShips, int x, int y){
     /*Промах*/
     int result = 0; // результат выстрела
     if (field[y][x] == 0 || field[y][x] >= 6){
@@ -566,7 +566,7 @@ void move(int field[][10], int fakeField[][10], int *allShips){
         if (choose == 'w' || choose == 'a' || choose == 's' || choose == 'd') paintMove(fakeField, choose);
         /*Выполняем стрельбу*/
         else if (choose = 'e'){
-            hit = shot(field, fakeField, allShips);
+            hit = shot(field, fakeField, allShips, x, y);
             if (hit != 2) lastSymbol = fakeField[y][x];
             /*Меняем игрока*/
             if (!hit){
@@ -669,6 +669,8 @@ void onePlayer(){
     draw();
     system("pause");
     lastSymbol = 0;
+    x = 4;
+    y = 4;
     /*Игра продолжается пока не закончатся корабли*/
     while (players[0].allShips && players[1].allShips){
         /*Ход игрока*/
@@ -682,6 +684,7 @@ void onePlayer(){
         /*Ход компьютера*/
         else intelligenceShot(players[!player].fakeField);
    }
+    system ("pause");
     system ("cls");
     /*Завершение игры и вывод результатов*/
     if (!players[1].allShips){

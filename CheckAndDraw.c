@@ -8,26 +8,22 @@ char skins [] = {'.', '#', '+', '*', 'X', 'O', '.', '.', '.', '.'}; // Скины
 void printInvisibleSymbols(int field[][10], int typeShip, int x, int y){
         /*Высчитываем прямоугольник вокруг корабля,
     затем заполням невидимыми символами*/
-    int j, i, firstMaxCheck, secondMaxCheck; 
+    int j = y, i = x, firstMaxCheck, secondMaxCheck; 
     /*По горизонтали
     определяем начальные и конечные координаты*/
-    if (field[y][x+1] == 1){
-        j = y; 
+    if (field[y][x+1] == 1 || field[y][x+1] == 3 || field[y][x+1] == 4){
         firstMaxCheck = 1 + y;
-        i = x; 
         secondMaxCheck = typeShip + x;
     }
     /*По вертикали
     определяем начальные и конечные координаты*/
     else {
-        j = y; 
         firstMaxCheck = typeShip + y;
-        i = x; 
         secondMaxCheck = x + 1;
     }
     /*Проверяем есть ли рядом стена*/
     if (j != 0) j--;
-    int last_j = j; 
+    int last_j = j; // Сохраняем начальное значение
     if (i != 0) i--;
     /*Проверка клеток*/
     while(i <= secondMaxCheck && i <= 9){
@@ -36,6 +32,7 @@ void printInvisibleSymbols(int field[][10], int typeShip, int x, int y){
             j++;
         }
         i++;
+        /*Возвращаем начальное значение*/
         j = last_j;
     } 
 }
@@ -68,7 +65,7 @@ void printField(int field[][10]){
     printf ("-\n");
 }
 /*Рисует игровое поле*/
-void drawField(int firstField[][10], int secondField[][10]){
+void drawField(int firstField[][10], int secondField[][10], int firstAllShips, int secondAllShips){
     system("cls");
         printf ("      ПЕРВЫЙ ИГРОК");
     printf ("                  ВТОРОЙ ИГРОК\n   ");
@@ -111,6 +108,8 @@ void drawField(int firstField[][10], int secondField[][10]){
     printf ("-          ");
     for (int i = 0; i < 9; i++) printf ("--");
     printf ("-\n");
+    printf("Осталось всего попаданий: %i", firstAllShips);
+    printf("       Осталось всего попаданий: %i", secondAllShips);
 }
 /*Рисует уничтоженный корабль*/
 void kill(int fakeField[][10], int side, int backSide, int position, int x, int y){
@@ -118,7 +117,7 @@ void kill(int fakeField[][10], int side, int backSide, int position, int x, int 
     if (!position) {
         fakeField[y][x] = 4;
         /*Рисуем вокруг невидимые символы*/
-        printInvisibleSymbols(fakeField, backSide + 1 + side, x, y - backSide);
+        printInvisibleSymbols(fakeField, 1, x, y);
     }
     /*Горизонтальный корабль*/
     else if (position == 1){
@@ -199,14 +198,17 @@ int checkShip(int field[][10], int lastField[][10], int x, int y, int typeShip, 
     }
     /*Проверяем есть ли рядом стена*/
         if (j != 0) j--;
+        int last_j = j; // Сохраняем начальное значение
         if (i != 0) i--;
         /*Проверка клеток*/
         while(i <= secondMaxCheck && i <= 9){
             while(j <= firstMaxCheck && j <= 9){
                 if (lastField[j][i] == 1 ) return 0;
-                j++;
+                j++; 
             }
             i++;
+            /*Возвращаем начальное значение*/
+            j = last_j;
         } 
     return 1;
 }
