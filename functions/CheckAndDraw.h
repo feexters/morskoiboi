@@ -18,3 +18,6 @@ void drawField(int firstField[][10], int secondField[][10]);
 
 /*Очистка поля от "мусора"*/
 void clearField(int field[][10]);
+
+/*Рисует невидимые символы*/
+void printInvisibleSymbols(int field[][10], int typeShip, int x, int y);

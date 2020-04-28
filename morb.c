@@ -19,7 +19,7 @@ struct player{
 для вычисления расположения корабля и его убийства*/
 struct memory{
     int lastShot; // Результат последнего выстрела
-    int routes[2][2]; // Возможные места отностельно места попадания 
+    int routes[4]; // Возможные места отностельно места попадания 
     int position; // По какой оси может располагаться корабль
     int firstHit[2]; // Первое попадание
     int allHits; // Всего попаданий
@@ -49,104 +49,104 @@ void remainingShips(int killTypeShip){
     memoryAI.minTypeShip = ++i;
     memoryAI.maxTypeShip = ++j;
 }
-/*Рисуем невидимые символы, недающие поставить корабль на это место*/
-void printInvisibleSymbols(int field[][10], int typeShip){
-        /*Высчитываем прямоугольник вокруг корабля,
-    затем заполням невидимыми символами*/
-    int j, i, firstMaxCheck, secondMaxCheck; 
-    /*По горизонтали
-    определяем начальные и конечные координаты*/
-    if (field[y][x+1] == 1){
-        j = y; 
-        firstMaxCheck = 1 + y;
-        i = x; 
-        secondMaxCheck = typeShip + x;
-    }
-    /*По вертикали
-    определяем начальные и конечные координаты*/
-    else {
-        j = y; 
-        firstMaxCheck = typeShip + y;
-        i = x; 
-        secondMaxCheck = x + 1;
-    }
-    /*Проверяем есть ли рядом стена*/
-    if (j != 0) j--;
-    int last_j = j; 
-    if (i != 0) i--;
-    /*Проверка клеток*/
-    while(i <= secondMaxCheck && i <= 9){
-        while(j <= firstMaxCheck && j <= 9){
-            if (field[j][i] != 1) field[j][i] = 9;
-            j++;
-        }
-        i++;
-        j = last_j;
-    } 
-}
 /*Анализ поля вокруг корабля после первого попадания*/
-int AnalysisForShot(int field[][10],int routes[][2], int minTypeShip, int maxTypeShip){
-    int positions = 0;
+int AnalysisForShot(int field[][10],int routes[], int minTypeShip, int maxTypeShip, int x, int y){
+    /*Обнуляем значения*/
+    int positions = 0; // По какой оси располжен
+    for (int i = 0; i < 4; i++) routes[i] = 0; 
     /*Проверяем количество доступных для стрельбы клеток в 4-х направлениях*/
-    for (int i = y + 1; i < y + maxTypeShip && field [i][x] != 5 && field[i][x] && i != 9; i++) routes[0][0] ++; //вниз
-    for (int i = y - 1; i > y - maxTypeShip && field [i][x] != 5 && field[i][x] && i != 0; i--) routes[0][1] ++; //вверх
-    for (int i = x + 1; i < x + maxTypeShip && field [y][i] != 5 && field[y][i] && i != 9; i++) routes[1][0] ++; //вправо
-    for (int i = x - 1; i > x - maxTypeShip && field [y][i] != 5 && field[y][i] && i != 0; i--) routes[1][1] ++; //влево
+    for (int i = y + 1; i < y + maxTypeShip && field [i][x] != 5 && field[i][x] && i <= 9; i++) routes[0] ++; //вниз
+    for (int i = y - 1; i > y - maxTypeShip && field [i][x] != 5 && field[i][x] && i >= 0; i--) routes[1] ++; //вверх
+    for (int i = x + 1; i < x + maxTypeShip && field [y][i] != 5 && field[y][i] && i <= 9; i++) routes[2] ++; //вправо
+    for (int i = x - 1; i > x - maxTypeShip && field [y][i] != 5 && field[y][i] && i >= 0; i--) routes[3] ++; //влево
     /*Проверям возможные направления размещения корабля*/
-    if (routes[0][0] + routes[0][1] >= minTypeShip - 1) positions ++;
-    if (routes[1][0] + routes[1][1] >= minTypeShip - 1) positions += 2;
+    if (routes[0] + routes[1] >= minTypeShip - 1) positions ++;
+    if (routes[2] + routes[3] >= minTypeShip - 1) positions += 2;
+    #ifdef TEST_AI
+        printf("\nВозможные направления: %i, %i, %i, %i", routes[0], routes[1], routes[2], routes[3]);
+    #endif
     return positions;
 }
 /*Если попадание было не смертельным, 
 то функция будет добивать, пытаясь угадать расположение корабля*/
-int intelligenceRoadToKill(int routes[][2], int position, int field[][10]){
-    int canShot[4];
-    int allPlaces;
-    int chosePlace, result;
+int intelligenceRoadToKill(int routes[], int position, int field[][10]){
+    int canShot[4];// места для стрельбы
+    int allPlaces = 0; // всего ест для стрельбы
+    int chosePlace, result; // выбранное место, результат стрельбы
+    #ifdef TEST_AI
+        printf("\nВозможные направления: %i, %i, %i, %i", routes[0], routes[1], routes[2], routes[3]);
+    #endif
+    /*Определяем доступные направления для стрельбы*/
     if (position == 1 || position == 3){
         /*вниз*/
-        if(routes[0][0]) 
+        if(routes[0]) 
             canShot[allPlaces++] = 1;
         /*вверх*/
-        if(routes[0][1]) 
+        if(routes[1]) 
             canShot[allPlaces++] = 2;
     }
     if (position == 2 || position == 3){
         /*вправо*/
-        if(routes[1][0]) 
+        if(routes[2]) 
             canShot[allPlaces++] = 3;
         /*влево*/
-        if(routes[1][1]) 
+        if(routes[3]) 
             canShot[allPlaces++] = 4;
     }
+    /*Выбираем направление и задаем начальные координаты*/
     chosePlace = canShot[rand()%allPlaces];
     y = memoryAI.firstHit[0];
     x = memoryAI.firstHit[1]; 
+    /*стреляем вниз*/
     if(chosePlace == 1){
         while(field[++y][x] == 3);
     }
+    /*стреляем вверх*/
     else if(chosePlace == 2){
         while(field[--y][x] == 3);
     }
+    /*стреляем вправо*/
     else if(chosePlace == 3){
         while(field[y][++x] == 3);
     }
+    /*стреляем влево*/
     else {
         while(field[y][--x] == 3);
     }
-    result = shot(field, players[0].fakeField, &players[0].allShips);
-    if (!result) player = 0; // Сменяем игроков
-    else if (result = 3){
+    #ifdef TEST_AI
+        printf("\nДоступные направления: ");
+        for(int i = 0; i < allPlaces; i++)
+            printf("%i ", canShot[i]);
+        printf("\nВыбранное направление: %i", chosePlace);
+        printf("\nВыбранное место: y = %i, x = %i", y, x);
+        system("pause");
+        drawField(players[0].field, players[1].fakeField);
+    #endif
+    result = shot(players[0].field, field, &players[0].allShips);
+    /*Промах*/
+    if (!result) {
+        routes[chosePlace - 1] = 0;
+        player = 0; // Сменяем игроков
+        /*Возвращаем начальные значения координатам*/
+        x = 4;
+        y = 4; 
+        lastSymbol = players[player].fakeField[y][x];
+    }
+    /*Убил*/
+    else if (result == 3){
             memoryAI.lastShot = 0;
             memoryAI.position = 0;
             remainingShips(++memoryAI.allHits);
             memoryAI.allHits == 0;
-            memoryAI.routes[0][0] = 0;
-            memoryAI.routes[0][1] = 0;
-            memoryAI.routes[1][0] = 0;
-            memoryAI.routes[1][1] = 0;
+            for (int i = 0; i < 4; i++) routes[i] = 0;;
     }
-    else if (result == 1) memoryAI.allHits++;
+    /*Попал*/
+    else if (result == 1) {
+        memoryAI.allHits++;
+        routes[chosePlace - 1]--;
+        if(chosePlace - 1 == 0 || chosePlace - 1 == 1) position = 1;
+        else position = 2;
+    }
     return result;
 }
 /*Стрельба ИИ*/
@@ -158,9 +158,8 @@ int intelligenceShot(int field[][10]){
     else {
         /*Полный анализ поля*/
         intelligenceAnalysis(field, memoryAI.minTypeShip);
-        #ifdef TEST
+        #ifdef TEST_AI
             draw();
-            printf("\n%i",memoryAI.minTypeShip);
             system("pause");
         #endif
         int canShot[99];// Возможные места для стрельбы
@@ -177,18 +176,25 @@ int intelligenceShot(int field[][10]){
         x = chosePlace % 10;
         y = chosePlace / 10;
         /*Результат стрельбы*/
-        result = shot(field, players[0].fakeField, &players[0].allShips);
-        if (!result) player = 0; // Сменяем игроков
+        result = shot(players[0].field, field, &players[0].allShips);
+        if (!result) {
+            player = 0; // Сменяем игроков
+            /*Возвращаем начальные значения координатам*/
+            x = 4;
+            y = 4; 
+            lastSymbol = players[player].fakeField[y][x];    
+        }
         /*Фиксируем попадание*/
         else if (result == 1){
             memoryAI.firstHit[0] = y;
             memoryAI.firstHit[1] = x;
             memoryAI.lastShot = 1;
             memoryAI.allHits = 1;
-            memoryAI.position = AnalysisForShot(field, memoryAI.routes, memoryAI.minTypeShip, memoryAI.maxTypeShip);
+            memoryAI.position = AnalysisForShot(field, memoryAI.routes, memoryAI.minTypeShip, memoryAI.maxTypeShip, x, y);
         }
         /*Убил*/
         else remainingShips(1);
+        clearField(field);
     }
     return result;
 }
@@ -224,7 +230,7 @@ void intelligencePutShip(int field[][10], int typeShip){
     else {
         for(int j = x; j < x + typeShip; j++) field[y][j] = 1;
     }
-    printInvisibleSymbols(field, typeShip);
+    printInvisibleSymbols(field, typeShip, x, y);
     #ifdef TEST_AI
         printf("\nВыбранная позиция: %i\n", chosePosition);
         printf("x: %i\n", x);
@@ -245,9 +251,13 @@ int intelligenceAnalysis(int field[][10], int typeShip){
         for(x = 0; x <= 10 - typeShip; x++){
             /*Пропускаяем неподходящие*/
             if(field[y][x] == 0 || (field[y][x] >= 6 && field[y][x] <= 8)){
-                /*Фиксируем результат проверки*/
-                if (checkShip(field, field, x, y, typeShip, 1))
-                    field[y][x] = 6;
+                 int i = 0;
+                /*Проверяем всю строчку*/
+                while ((field[y][x + i] == 0 || (field[y][x + i] >= 6 && field[y][x + i] <= 8)) && i < typeShip){
+                    /*Фиксируем результат проверки, если можно поставить*/
+                    if (i == typeShip - 1) field[y][x] = 6;
+                    i++;
+                }
             }
         }
     }
@@ -256,10 +266,14 @@ int intelligenceAnalysis(int field[][10], int typeShip){
         for(int y = 0; y <= 10 - typeShip; y++){
             /*Пропускаяем неподходящие*/
             if(field[y][x] == 0 || (field[y][x] >= 6 && field[y][x] <= 8)){
-                /*Фиксируем результат проверки*/
-                if (checkShip(field, field, x, y, typeShip, 0)){
-                    if (field[y][x] == 6) field[y][x] += 2;
-                    else field[y][x] = 7;
+                int i = 0;
+                while ((field[y + i][x] == 0 || (field[y + i][x] >= 6 && field[y + i][x] <= 8)) && i < typeShip){
+                    /*Фиксируем результат проверки, если можно поставить*/
+                    if (i == typeShip - 1){
+                        if (field[y][x] == 6) field[y][x] += 2;
+                        else field[y][x] = 7;
+                    }
+                    i++;
                 }
             }
         }
@@ -438,16 +452,12 @@ void putShip(int field[][10], int typeShip){
 /*Выбор корабля для последующей расстановки*/
 void ships(int field[][10]){
     int ships[] = {4, 3, 2, 1}; // всего кораблей каждого вида
+    int result = 0;
     #ifdef TEST
         for (int i = 0; i < 4; i++){
             ships[i] = 1;
         }
-    #endif
-    int result = 0;
-    #ifdef TEST
         result = 10;
-    #elif TEST_AI
-        result = 20;
     #endif
     while (result < 20){
         system("cls");
@@ -483,10 +493,6 @@ void startGame(int gameMode){
     }
     if (gameMode){
         memoryAI.lastShot = 0; // Результат последнего выстрела
-        memoryAI.routes[0][0] = 0;
-        memoryAI.routes[0][1] = 0;
-        memoryAI.routes[1][0] = 0;
-        memoryAI.routes[1][1] = 0;
         memoryAI.position;
         memoryAI.firstHit[2];
         memoryAI.typeShip[0] = 4;
@@ -500,25 +506,27 @@ void startGame(int gameMode){
 /*Определяет есть ли попадание*/
 int shot(int field[][10], int fakeField[][10], int *allShips){
     /*Промах*/
-    if (field[y][x] == 0 || (field[y][x] >= 6 && field[y][x] <= 9)){
+    int result = 0; // результат выстрела
+    if (field[y][x] == 0 || field[y][x] >= 6){
         field[y][x] = 5;
         fakeField[y][x] = 5;
-        return 0;
+        return result;
     }
     /*Попал*/
     else if (field[y][x] == 1) {
         field[y][x] = 3;
         fakeField[y][x] = field[y][x];
         /*Проверка на убийство*/
-        checkKill(field, fakeField, x, y);
+        result = checkKill(field, fakeField, x, y);
         /*Сокращаем кол-во кораблей*/
         --*(allShips);
-        return 1;
+        return result + 1;
     }
     else {
         printf ("\n   Вы уже стреляли в это место,");
         printf ("\nвыберите другое и повторите попытку.\n\n");
-        return 2;
+        result = 2;
+        return result;
     }
 }
 /*Рисует перемещение прицела*/
@@ -638,9 +646,6 @@ void onePlayer(){
     ships(players[0].field);
     players[0].allShips = 20;
     system("cls");
-    #ifdef TEST
-        players[0].allShips = 10;
-    #endif
     /*Расстановка кораблей компьютером*/
     intelligenceShips(players[1].field);
     players[1].allShips = 20;
@@ -651,6 +656,7 @@ void onePlayer(){
                 players[1].fakeField[i][j] = players[1].field[i][j];
             }
         }
+        players[0].allShips = 10;
     #elif TEST_AI
         /*Показываем расположения кораблей*/
         for (int i = 0; i < 10; i++){
@@ -658,6 +664,7 @@ void onePlayer(){
                 players[1].fakeField[i][j] = players[1].field[i][j];
             }
         }
+        players[0].allShips = 20;
     #endif
     draw();
     system("pause");
@@ -665,13 +672,19 @@ void onePlayer(){
     /*Игра продолжается пока не закончатся корабли*/
     while (players[0].allShips && players[1].allShips){
         /*Ход игрока*/
-        if (!player) move(players[!player].field, players[!player].fakeField, &players[!player].allShips);
+        if (!player) {
+            #ifdef TEST_AI
+                player = 1;
+            #else 
+                move(players[!player].field, players[!player].fakeField, &players[!player].allShips);
+            #endif
+        }
         /*Ход компьютера*/
         else intelligenceShot(players[!player].fakeField);
    }
     system ("cls");
     /*Завершение игры и вывод результатов*/
-    if (!players[0].allShips){
+    if (!players[1].allShips){
         printf ("     ПОБЕДА!!!\n");
         printf ("    КОНЕЦ ИГРЫ\n\n");
         system("pause");
