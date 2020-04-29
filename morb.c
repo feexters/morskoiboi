@@ -1,4 +1,4 @@
-/*gcc morb.c check.c draw.c- компиляция*/
+/*gcc morb.c check.c draw.c computer.c analysis.c - компиляция*/
 #include <stdio.h>
 #include "ctype.h"
 #include "time.h"

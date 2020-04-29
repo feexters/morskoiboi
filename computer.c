@@ -111,7 +111,7 @@ int intelligenceShot(struct memory *memoryAI, struct player players[], int x, in
         /*Полный анализ поля*/
         intelligenceAnalysis(players[0].fakeField, memoryAI->minTypeShip);
         #ifdef TEST_AI
-            draw();
+            drawField(players[0].fakeField, players[1].fakeField, players[0].allShips, players[1].allShips);
             system("pause");
         #endif
         int canShot[99];// Возможные места для стрельбы
