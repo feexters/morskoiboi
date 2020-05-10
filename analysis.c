@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include "stdlib.h"
 #include "functions/morskoiboi.h"
 
 /*Полный анализ поля на возможные расстановки

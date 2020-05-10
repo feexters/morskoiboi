@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include "stdlib.h"
 #include "functions/morskoiboi.h"
 
 /*Расставляет корабли*/
@@ -178,16 +176,20 @@ void move(int field[][10], int fakeField[][10], int *allShips, int *lastSymbol, 
     }
 }
 
+/*Перемещение в меню*/
 int menuNavigation(int totalPoints, int *choosePoint){
     char move = getch();
+    /*Вверх*/
     if (move == 'w'){
         if (*choosePoint != 0) --(*choosePoint);
         else *choosePoint = 3;
     }
+    /*Вниз*/
     else if (move == 's'){
         if (*choosePoint != 3) ++(*choosePoint);
         else *choosePoint = 0;
     }
+    /*Выбранный пункт*/
     else if (move == 'e') return 0;
     return 1;
 }
