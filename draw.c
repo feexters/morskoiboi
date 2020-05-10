@@ -128,11 +128,40 @@ void kill(int fakeField[][10], int side, int backSide, int position, int x, int 
         printInvisibleSymbols(fakeField, backSide + 1 + side, x - backSide, y);
     }
     /*Вертикальный корабль*/
-    else{
+    else{ 
         for (int i = y - backSide; i <= y + side; i++){
             fakeField[i][x] = 4;
         }
         /*Рисуем вокруг невидимые символы*/
         printInvisibleSymbols(fakeField, backSide + 1 + side, x, y - backSide);
     }
+}
+
+/*Рисует перемещение прицела*/
+int paintMove (int fakeField[][10], char choose, int *lastSymbol, int *x, int *y){
+    /*Проверяем направление и отсутствие выхода за пределы поля*/
+    /*Вверх*/
+    if (choose == 'w' && *y != 0) {
+        fakeField[*y][*x] = *lastSymbol;
+        --(*y);
+        }
+    /*Влево*/
+    else if (choose == 'a' && *x != 0) {
+        fakeField[*y][*x] = *lastSymbol;
+        --(*x);
+        }
+    /*Вниз*/
+    else if (choose == 's' && *y != 9) {
+        fakeField[*y][*x] = *lastSymbol;
+        ++(*y);}
+    /*Вправо*/
+    else if (choose == 'd' && *x != 9) {
+        fakeField[*y][*x] = *lastSymbol;
+        ++(*x);
+        }
+    /*Выход за пределы поля*/
+    else return 0;
+    *lastSymbol = fakeField[*y][*x];
+    fakeField[*y][*x] = 2;
+    draw();
 }

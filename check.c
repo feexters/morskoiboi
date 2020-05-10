@@ -2,6 +2,7 @@
 #include "stdlib.h"
 #include "functions/morskoiboi.h"
 
+
 /*Проверяет уничтожен ли корабль*/
 int checkKill(int field[][10], int fakeField[][10], int x, int y){
     /*Определяем по какой оси расположен корабль и не является ли он однопалубным*/
@@ -39,6 +40,32 @@ int checkKill(int field[][10], int fakeField[][10], int x, int y){
     /*Если это однопалубник*/
     else kill(fakeField, 0, 0, 0, x, y);
     return 2;
+}
+/*Определяет есть ли попадание*/
+int shot(int field[][10], int fakeField[][10], int *allShips, int x, int y){
+    /*Промах*/
+    int result = 0; // результат выстрела
+    if (field[y][x] == 0 || field[y][x] >= 6){
+        field[y][x] = 5;
+        fakeField[y][x] = 5;
+        return result;
+    }
+    /*Попал*/
+    else if (field[y][x] == 1) {
+        field[y][x] = 3;
+        fakeField[y][x] = field[y][x];
+        /*Проверка на убийство*/
+        result = checkKill(field, fakeField, x, y);
+        /*Сокращаем кол-во кораблей*/
+        --*(allShips);
+        return result + 1;
+    }
+    else {
+        printf ("\n   Вы уже стреляли в это место,");
+        printf ("\nвыберите другое и повторите попытку.\n\n");
+        result = 2;
+        return result;
+    }
 }
 /*Проверяет можно ли поставить здесь корабль*/
 int checkShip(int field[][10], int lastField[][10], int x, int y, int typeShip, int position){

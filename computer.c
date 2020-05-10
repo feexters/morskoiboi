@@ -22,6 +22,7 @@ void intelligenceShips(struct player players[]){
         clearField(players[1].field);
     }
 }
+
 /*Если попадание было не смертельным, 
 то функция будет добивать, пытаясь угадать расположение корабля*/
 int intelligenceRoadToKill(struct memory *memoryAI, struct player players[], int x, int y){
@@ -89,8 +90,8 @@ int intelligenceRoadToKill(struct memory *memoryAI, struct player players[], int
             memoryAI->lastShot = 0;
             memoryAI->position = 0;
             remainingShips(memoryAI, ++memoryAI->allHits);
-            memoryAI->allHits == 0;
-            for (int i = 0; i < 4; i++) memoryAI->routes[i] = 0;;
+            memoryAI->allHits = 0;
+            for (int i = 0; i < 4; i++) memoryAI->routes[i] = 0;
     }
     /*Попал*/
     else if (result == 1) {
@@ -101,6 +102,7 @@ int intelligenceRoadToKill(struct memory *memoryAI, struct player players[], int
     }
     return result;
 }
+
 /*Стрельба ИИ*/
 int intelligenceShot(struct memory *memoryAI, struct player players[], int x, int y){
     int result; //результат выстрела
@@ -129,8 +131,7 @@ int intelligenceShot(struct memory *memoryAI, struct player players[], int x, in
         y = chosePlace / 10;
         /*Результат стрельбы*/
         result = shot(players[0].field, players[0].fakeField, &players[0].allShips, x, y);
-        if (!result) {
-        }
+        if (!result) return result;
         /*Фиксируем попадание*/
         else if (result == 1){
             memoryAI->firstHit[0] = y;
@@ -143,8 +144,12 @@ int intelligenceShot(struct memory *memoryAI, struct player players[], int x, in
         else remainingShips(memoryAI, 1);
         clearField(players[0].fakeField);
     }
+    /*определяем оставшиеся попадания*/
+    players[0].allShips = 0;
+    for (int i = 0; i < 4; i++) players[0].allShips += memoryAI->typeShip[i] * (i + 1);
     return result;
 }
+
 /*Удаление корабля из списка*/
 void remainingShips(struct memory *memoryAI, int killTypeShip){
     /*удаляем корабль*/
@@ -155,6 +160,13 @@ void remainingShips(struct memory *memoryAI, int killTypeShip){
     while(!memoryAI->typeShip[j] && j >= 0) j--;
     memoryAI->minTypeShip = ++i;
     memoryAI->maxTypeShip = ++j;
+    #ifdef TEST_AI
+            printf("\nМинимальный: %i\n", memoryAI->minTypeShip);
+            printf("Максимальный: %i\n", memoryAI->maxTypeShip);
+            printf ("Остались кораблей: ");
+            for(int i = 0; i < 4; i++) printf("%i ", memoryAI->typeShip[i]);
+            system("pause");
+    #endif
 }
 /*Ставит корабль*/
 void intelligencePutShip(int field[][10], int typeShip){

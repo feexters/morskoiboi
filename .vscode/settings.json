@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "check.h": "c"
+        "check.h": "c",
+        "stdio.h": "c",
+        "ctype.h": "c",
+        "morskoiboi.h": "c"
     }
 }
