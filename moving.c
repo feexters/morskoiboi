@@ -167,13 +167,27 @@ void move(int field[][10], int fakeField[][10], int *allShips, int *lastSymbol, 
             if (!hit){
                 if (*player == 0) *player = 1;
                 else *player = 0;
-                    /*Возвращаем начальные значения координатам*/
-                    *x = 4;
-                    *y = 4; 
-                    *lastSymbol = players[*player].fakeField[*y][*x];
+                /*Возвращаем начальные значения координатам*/
+                *x = 4;
+                *y = 4; 
+                *lastSymbol = players[*player].fakeField[*y][*x];
+                players[*player].fakeField[*y][*x] = 2;
                 draw();
             }
          }
     }
 }
 
+int menuNavigation(int totalPoints, int *choosePoint){
+    char move = getch();
+    if (move == 'w'){
+        if (*choosePoint != 0) --(*choosePoint);
+        else *choosePoint = 3;
+    }
+    else if (move == 's'){
+        if (*choosePoint != 3) ++(*choosePoint);
+        else *choosePoint = 0;
+    }
+    else if (move == 'e') return 0;
+    return 1;
+}

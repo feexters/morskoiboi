@@ -1,12 +1,9 @@
-/*gcc morb.c check.c draw.c computer.c analysis.c - компиляция*/
-#include <stdio.h>
-#include "ctype.h"
-#include "time.h"
-#include "stdlib.h" //Для функции system(), rand()
+/*gcc morb.c check.c draw.c analysis.c computer.c moving.c -o MorskoiBoi - компиляция игры*/
+/*gcc morb.c check.c draw.c analysis.c computer.c moving.c -D TEST -o TEST - компиляция игры в режиме тестирования*/
+/*gcc morb.c check.c draw.c analysis.c computer.c moving.c -D TEST_AI -o TEST_AI - компиляция игры в режиме тестирования ИИ*/
+
 /*Библиотека с функциями для игры*/
 #include "functions/morskoiboi.h"
-//#define TEST //- запус программы в режиме тестирования
-//#define TEST_AI //- запус программы в режиме тестирования ИИ
 
 struct player players[2];
 struct memory memoryAI;
@@ -47,23 +44,40 @@ void ships(int field[][10]){
     #endif
     while (result < 20){
         system("cls");
+        int choosePoint = 0; // выбранный пункт
+        /*Меню игры*/
+        char points[4][55] = {{"1. Однопалубник. Осталось:"},
+                            {"2. Двухпалубник. Осталось:"},
+                            {"3. Трехпалубник. Осталось:"},
+                            {"4. Четырехпалубник. Осталось:"}};
+        /*Рисуем меню*/
+        system("cls");
         printf("    Выберите тип корабля\n\n");
-        printf("1. Однопалубник. Осталось: %i\n", ships[0]);
-        printf("2. Двухпалубник. Осталось: %i\n", ships[1]);
-        printf("3. Трехпалубник. Осталось: %i\n", ships[2]);
-        printf("4. Четырехпалубник. Осталось: %i\n", ships[3]);
-        char choose = getch();
-        if (choose <= '4' && choose >= '1'){
-            /*Если такой корабль остался то переход к расстановке*/
-                if (ships[choose - '0' - 1] != 0){
-                    putShip(field, choose - '0');
-                    ships[choose - '0' - 1]--;
-                    result += choose - '0';
-                }
-                else {
-                printf ("Такие корабли закончились, выберите другой тип корабля.\n\n");
-                system("pause");
+        for (int i = 0; i < 4; i++){
+            printf ("%s %i", points[i], ships[i]);
+            if (i == choosePoint) printf ("  <--------");
+            printf("\n");
+        }
+        /*Выбираем нужный пункт*/
+        while(menuNavigation(4, &choosePoint)){
+            system("cls");
+            printf("    Выберите тип корабля\n\n");
+            for (int i = 0; i < 4; i++){
+                printf ("%s %i", points[i], ships[i]);
+                /*Указывает на выбранный пункт*/
+                if (i == choosePoint) printf ("  <--------");
+                printf("\n");
             }
+        }
+        /*Если такой корабль остался, то переход к расстановке*/
+            if (ships[choosePoint] != 0){
+                putShip(field, choosePoint + 1);
+                ships[choosePoint]--;
+                result += choosePoint + 1;
+            }
+            else {
+            printf ("Такие корабли закончились, выберите другой тип корабля.\n\n");
+            system("pause");
         }
     }
 }
@@ -151,8 +165,8 @@ void onePlayer(){
     /*Обнуление полей и вывод информации*/
     startGame(1);
     system("cls");
-    printf("\n\n\n           Для начала игры\n");
-    printf("      вы должны расставить свои корабли.\n\n\n");
+    printf("\n       Для начала игры\n");
+    printf("  вы должны расставить свои корабли.\n\n\n");
     system ("pause");
     /*Расстановка кораблей игроком*/
     ships(players[0].field);
@@ -178,11 +192,11 @@ void onePlayer(){
         }
         players[0].allShips = 20;
     #endif
-    draw();
-    system("pause");
-    lastSymbol = 0;
     x = 4;
     y = 4;
+    lastSymbol = players[1].fakeField[y][x];
+    players[1].fakeField[y][x] = 2;
+    draw();
     /*Игра продолжается пока не закончатся корабли*/
     while (players[0].allShips && players[1].allShips){
         /*Ход игрока*/
@@ -200,7 +214,9 @@ void onePlayer(){
                 /*Возвращаем начальные значения координатам*/
                 x = 4;
                 y = 4; 
-                lastSymbol = players[1].fakeField[y][x]; 
+                lastSymbol = players[1].fakeField[y][x];
+                players[1].fakeField[y][x] = 2;
+                draw();
             }
         }
     }
@@ -232,31 +248,53 @@ void onePlayer(){
 }
 int main(){
     srand(time(NULL));// Для генерации псевдо случайных чисел
+    int choosePoint = 0; // выбранный пункт
     /*Меню игры*/
+    char points[4][35] = {{"1. Одиночная игра"},
+                          {"2. Два игрока"},
+                          {"3. Правила игры"},
+                          {"4. Выход"}};
+    /*Рисуем меню*/
     system("cls");
     printf ("     МОРСКОЙ БОЙ\n\n");
     printf (" Выберите режим игры:\n\n");
-    printf ("1. Одиночная игра\n");
-    printf ("2. Два игрока\n");
-    printf ("3. Правила игры\n");
-    printf ("4. Выход\n");
-    switch (getchar()){
-        case '1': 
+    for (int i = 0; i < 4; i++){
+        printf ("%s", points[i]);
+        if (i == choosePoint) printf ("  <--------");
+        printf("\n");
+    }
+    /*Выбираем нужный пункт*/
+    while(menuNavigation(4, &choosePoint)){
+        system("cls");
+        printf ("     МОРСКОЙ БОЙ\n\n");
+        printf (" Выберите режим игры:\n\n");
+        for (int i = 0; i < 4; i++){
+            printf ("%s", points[i]);
+            /*Указывает на выбранный пункт*/
+            if (i == choosePoint) printf ("  <--------");
+            printf("\n");
+        }
+    }
+    switch (++choosePoint){
+        /*Одиночная игра*/
+        case 1: 
             onePlayer();
             break;
-        case '2': 
+        /*Два игрока*/
+        case 2: 
             twoPlayers();
             break;
-        case '3':
+        /*Правила игра*/
+        case 3:
             rules();
             break;
-        case '4':
+        /*Выход из игры*/
+        case 4:
             printf ("До новых встреч!!!\n");
             system("pause");
             return 0;
             break;
         default: 
-            printf ("Вы ввели неверное значение! Попробуйте еще раз!\n");
             main();
             break;
     }
