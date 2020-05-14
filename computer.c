@@ -82,8 +82,10 @@ int intelligenceRoadToKill(struct memory *memoryAI, struct player players[], int
     /*Промах*/
     if (!result) {
         memoryAI->routes[chosePlace - 1] = 0;
+        if (memoryAI->routes[0] + memoryAI->routes[1] < memoryAI->minTypeShip - memoryAI->allHits) memoryAI->position = 2;
+        else if (memoryAI->routes[2] + memoryAI->routes[3] < memoryAI->minTypeShip - memoryAI->allHits) memoryAI->position = 1;
     }
-    /*Убил*/
+   /*Убил*/
     else if (result == 3){
             memoryAI->lastShot = 0;
             memoryAI->position = 0;
@@ -103,7 +105,7 @@ int intelligenceRoadToKill(struct memory *memoryAI, struct player players[], int
 
 /*Стрельба ИИ*/
 int intelligenceShot(struct memory *memoryAI, struct player players[], int x, int y){
-    int result; //результат выстрела
+     int result; //результат выстрела
     /*Если есть недобитый корабль*/
     if (memoryAI->lastShot == 1) result = intelligenceRoadToKill(memoryAI, players, x, y);
     /*Расположение корабля неизвестно*/

@@ -85,6 +85,7 @@ void ships(int field[][10]){
 void startGame(int gameMode){
     for (int i = 0; i < 10; i++){
         for(int j = 0; j < 10; j++){
+            player = 0;
             players[0].field[i][j] = 0;
             players[1].field[i][j] = 0;
             players[0].fakeField[i][j] = 0;
@@ -148,13 +149,13 @@ void twoPlayers(){
     system ("cls");
     /*Завершение игры и вывод результатов*/
     if (!players[0].allShips){
-        printf ("Победил ПЕРВЫЙ игрок!!!\n");
+        printf ("Победил ВТОРОЙ игрок!!!\n");
         printf ("    КОНЕЦ ИГРЫ\n\n");
         system("pause");
         main();
     }
     else{
-        printf ("Победил Второй игрок!!!\n");
+        printf ("Победил ПЕРВЫЙ игрок!!!\n");
         printf ("    КОНЕЦ ИГРЫ\n\n");
         system("pause");
         main();
@@ -290,8 +291,10 @@ int main(){
             break;
         /*Выход из игры*/
         case 4:
-            printf ("До новых встреч!!!\n");
+            system("cls");
+            printf ("   До новых встреч!!!\n\n\n");
             system("pause");
+            exit(1);
             return 0;
             break;
         default: 

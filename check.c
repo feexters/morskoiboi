@@ -1,6 +1,5 @@
 #include "functions/morskoiboi.h"
 
-
 /*Проверяет уничтожен ли корабль*/
 int checkKill(int field[][10], int fakeField[][10], int x, int y){
     /*Определяем по какой оси расположен корабль и не является ли он однопалубным*/

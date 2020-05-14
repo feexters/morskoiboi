@@ -107,7 +107,7 @@ void drawField(int firstField[][10], int secondField[][10], int firstAllShips, i
     for (int i = 0; i < 9; i++) printf ("--");
     printf ("-\n");
     printf("  Осталось попаданий: %i", firstAllShips);
-    printf("  Осталось попаданий: %i\n\n", secondAllShips);
+    printf("       Осталось попаданий: %i\n\n", secondAllShips);
 }
 /*Рисует уничтоженный корабль*/
 void kill(int fakeField[][10], int side, int backSide, int position, int x, int y){

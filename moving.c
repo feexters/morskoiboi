@@ -168,8 +168,7 @@ void move(int field[][10], int fakeField[][10], int *allShips, int *lastSymbol, 
                 /*Возвращаем начальные значения координатам*/
                 *x = 4;
                 *y = 4; 
-                *lastSymbol = players[*player].fakeField[*y][*x];
-                players[*player].fakeField[*y][*x] = 2;
+                *lastSymbol = players[!*player].fakeField[*y][*x];
                 draw();
             }
          }
@@ -182,11 +181,11 @@ int menuNavigation(int totalPoints, int *choosePoint){
     /*Вверх*/
     if (move == 'w'){
         if (*choosePoint != 0) --(*choosePoint);
-        else *choosePoint = 3;
+        else *choosePoint = totalPoints - 1;
     }
     /*Вниз*/
     else if (move == 's'){
-        if (*choosePoint != 3) ++(*choosePoint);
+        if (*choosePoint != totalPoints - 1) ++(*choosePoint);
         else *choosePoint = 0;
     }
     /*Выбранный пункт*/
